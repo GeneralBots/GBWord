@@ -11,6 +11,16 @@
      padding: 0;
  }
  
+ a {
+    text-decoration: none;
+    color: black;
+    vertical-align: text-top !important;
+ }
+
+ i {
+    margin-top: 20px;
+ }
+
  ul {
      margin: 0;
      padding: 0;

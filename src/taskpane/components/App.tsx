@@ -300,16 +300,19 @@ export default class App extends React.Component<AppProps, AppState> {
         &nbsp;
         <a onClick={this.formatCode} href="#">
           <i className={`ms-Icon ms-Icon--DocumentApproval`} title="Format"></i>
-          &nbsp; Format &nbsp;
-        </a>
-        <i className={`ms-Icon ms-Icon--AirplaneSolid`} onClick={this.run} title="Run"></i>
-        &nbsp; Run &nbsp;
-        <i className={`ms-Icon ms-Icon--StopSolid`} onClick={this.stop} title="Stop"></i>
-        &nbsp; Stop &nbsp;
-        <i className={`ms-Icon ms-Icon--Next`} onClick={this.stepOver} title="Step Over"></i>
-        &nbsp; Step &nbsp;
-        <i className={`ms-Icon ms-Icon--DRM`} onClick={this.setBreakpoint} title="Set Breakpoint"></i>
-        &nbsp; Break
+          &nbsp;Format</a>&nbsp;&nbsp;
+        <a onClick={this.run} href="#">
+        <i className={`ms-Icon ms-Icon--AirplaneSolid`} title="Run"></i>
+        &nbsp; Run</a>&nbsp;&nbsp;
+        <a onClick={this.stop} href="#">
+        <i className={`ms-Icon ms-Icon--StopSolid`} title="Stop"></i>
+        &nbsp; Stop</a>&nbsp;&nbsp;
+        <a onClick={this.stepOver} href="#">
+        <i className={`ms-Icon ms-Icon--Next`} title="Step Over"></i>
+        &nbsp; Step</a>&nbsp;&nbsp;
+        <a onClick={this.setBreakpoint} href="#">
+        <i className={`ms-Icon ms-Icon--DRM`} title="Set Breakpoint"></i>
+        &nbsp; Break</a>
         <br />
         <br />
         <div>Excution Mode: {this.state.mode} </div>
