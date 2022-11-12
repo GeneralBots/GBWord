@@ -71,7 +71,8 @@ export default class App extends React.Component<AppProps, AppState> {
   }
 
   updateExecutionContext = async () => {
-    const url = `${this.host}/debugger/${this.botId}/getExecutionContext`;
+    
+    const url = `${this.host}/api/v2/${this.botId}/debugger/getExecutionContext`;
 
     $.ajax({
       data: { botId: this.botId, botKey: this.botKey },
@@ -153,7 +154,7 @@ export default class App extends React.Component<AppProps, AppState> {
       return context.sync();
     });
 
-    const url = `${this.host}/debugger/${this.botId}/setBreakpoint`;
+    const url = `${this.host}/api/v2/${this.botId}/debugger/setBreakpoint`;
 
     $.ajax({
       data: { botId: this.botId, botKey: this.botKey, line },
@@ -167,7 +168,7 @@ export default class App extends React.Component<AppProps, AppState> {
   };
 
   continueExecution = async () => {
-    const url = `${this.host}/debugger/${this.botId}/continueRun`;
+    const url = `${this.host}/api/v2/${this.botId}/debugger/continueRun`;
 
     $.ajax({
       data: { botId: this.botId, botKey: this.botKey },
@@ -183,7 +184,7 @@ export default class App extends React.Component<AppProps, AppState> {
   };
 
   stepOver = async () => {
-    const url = `${this.host}/debugger/${this.botId}/stepOver`;
+    const url = `${this.host}/api/v2/${this.botId}/debugger/stepOver`;
 
     $.ajax({
       data: { botId: this.botId, botKey: this.botKey },
@@ -199,7 +200,7 @@ export default class App extends React.Component<AppProps, AppState> {
   };
 
   stop = async () => {
-    const url = `${this.host}/debugger/${this.botId}/stop`;
+    const url = `${this.host}/api/v2/${this.botId}/debugger/stop`;
 
     $.ajax({
       data: { botId: this.botId, botKey: this.botKey },
@@ -224,7 +225,7 @@ export default class App extends React.Component<AppProps, AppState> {
 
   run = async () => {
     if (this.state.mode === 0) {
-      const url = `${this.host}/debugger/${this.botId}/run`;
+      const url = `${this.host}/api/v2/${this.botId}/debugger/run`;
 
       $.ajax({
         data: { botId: this.botId, botKey: this.botKey },
