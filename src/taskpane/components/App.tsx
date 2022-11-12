@@ -21,6 +21,8 @@ export interface AppProps {
 export interface AppState {
   listItems: HeroListItem[];
   mode: number;
+  message: string;
+  scope: string;
 }
 
 export default class App extends React.Component<AppProps, AppState> {
@@ -29,6 +31,8 @@ export default class App extends React.Component<AppProps, AppState> {
     this.state = {
       mode: 0,
       listItems: [],
+      message: '',
+      scope: ''
     };
   }
 
@@ -38,6 +42,7 @@ export default class App extends React.Component<AppProps, AppState> {
   breakpointsMap = {};
 
   componentDidMount() {
+
     this.setState({
       listItems: [
         {
@@ -55,11 +60,21 @@ export default class App extends React.Component<AppProps, AppState> {
       ],
     });
 
-    this.botId = '-'; // TODO:
+    setTimeout((() => {
+      const context = this.updateExecutionContext();
+
+      this.setState({
+        mode: context['state'],
+        message: context['messages'][0],
+        scope: context['scope']
+      });
+
+
+    }).bind(this), 3000);
+
   }
 
-
-  updateExecutionContext = async (line) => {
+  updateExecutionContext = async () => {
 
     const url = `${this.host}/debugger/${this.botId}/getExecutionContext`;
 
@@ -228,7 +243,7 @@ export default class App extends React.Component<AppProps, AppState> {
     }
   }
 
-  click = async () => {
+  formatCode = async () => {
     return Word.run(async (context) => {
 
       var paragraphs = context.document.body.paragraphs;
@@ -273,12 +288,15 @@ export default class App extends React.Component<AppProps, AppState> {
     return (
       <div className="ms-welcome">
         <Header logo="assets/logo-filled.png" title={this.props.title} message="Welcome" />
+        <div>Excution Mode: {this.state.mode} </div>
+        <div>Bot Messages: {this.state.message} </div>
+        <div>Debug Scope: {this.state.scope} </div>
         <HeroList message="Discover what General Bots can do for you today!" items={this.state.listItems}>
           <Button
             className="ms-welcome__action"
             buttonType={ButtonType.hero}
-            iconProps={{ iconName: "ChevronRight" }}
-            onClick={this.click}
+            iconProps={{ iconName: "MdFormatPaint" }}
+            onClick={this.formatCode}
           >
             Format .gbdialog
           </Button>
@@ -293,7 +311,7 @@ export default class App extends React.Component<AppProps, AppState> {
           <Button
             className="ms-welcome__action"
             buttonType={ButtonType.hero}
-            iconProps={{ iconName: "BsPlayCircle" }}
+            iconProps={{ iconName: "BsStopCircle" }}
             onClick={this.stop}
           >
             Stop
@@ -301,7 +319,7 @@ export default class App extends React.Component<AppProps, AppState> {
           <Button
             className="ms-welcome__action"
             buttonType={ButtonType.hero}
-            iconProps={{ iconName: "BsPlayCircle" }}
+            iconProps={{ iconName: "BsFillDashCircleFill" }}
             onClick={this.setBreakpoint}
           >
             Set Breakpoint
@@ -309,7 +327,7 @@ export default class App extends React.Component<AppProps, AppState> {
           <Button
             className="ms-welcome__action"
             buttonType={ButtonType.hero}
-            iconProps={{ iconName: "BsPlayCircle" }}
+            iconProps={{ iconName: "VscDebugStepOver" }}
             onClick={this.stepOver}
           >
             Step Over
