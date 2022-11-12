@@ -59,9 +59,9 @@ export default class App extends React.Component<AppProps, AppState> {
   }
 
 
-  update = async (line) => {
+  updateExecutionContext = async (line) => {
 
-    const url = `${this.host}/debugger/${this.botId}/refresh`;
+    const url = `${this.host}/debugger/${this.botId}/getExecutionContext`;
 
     $.ajax({
       data: { botId: this.botId, botKey: this.botKey, line },
@@ -211,7 +211,7 @@ export default class App extends React.Component<AppProps, AppState> {
 
     if (this.state.mode === 0) {
 
-      const url = `${this.host}/debugger/${this.botId}/start`;
+      const url = `${this.host}/debugger/${this.botId}/run`;
 
       $.ajax({
         data: { botId: this.botId, botKey: this.botKey },
