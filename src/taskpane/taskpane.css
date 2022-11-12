@@ -48,11 +48,11 @@
  
  .ms-welcome__features {
      list-style-type: none;
-     margin-top: 20px;
+     margin-top: 10px;
  }
  
  .ms-welcome__features.ms-List .ms-ListItem {
-     padding-bottom: 20px;
+     padding-bottom: 10px;
      display: -webkit-flex;
      display: flex;
  }
