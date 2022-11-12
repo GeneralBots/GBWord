@@ -9,6 +9,10 @@ import "../../../assets/icon-32.png";
 import "../../../assets/icon-80.png";
 /* global Word */
 
+
+// https://learn.microsoft.com/en-us/javascript/api/
+// npm install -g ts-node@latest
+
 export interface AppProps {
   title: string;
   isOfficeInitialized: boolean;
@@ -16,15 +20,20 @@ export interface AppProps {
 
 export interface AppState {
   listItems: HeroListItem[];
+  mode: number;
 }
 
 export default class App extends React.Component<AppProps, AppState> {
   constructor(props, context) {
     super(props, context);
     this.state = {
+      mode: 0,
       listItems: [],
     };
   }
+
+  botId: any;
+  host = 'http://localhost';
 
   componentDidMount() {
     this.setState({
@@ -43,26 +52,112 @@ export default class App extends React.Component<AppProps, AppState> {
         },
       ],
     });
+
+    this.botId = '-'; // TODO:
   }
+
+
+  setExecutionLine = async (line) => {
+    Word.run(async (context) => {
+      var paragraphs = context.document.body.paragraphs;
+      paragraphs.load("$none");
+      await context.sync();
+      for (let i = 0; i < paragraphs.items.length; i++) {
+        const paragraph = paragraphs.items[i]
+
+        context.load(paragraph, ["text", "font"]);
+        paragraph.font.highlightColor = null;
+
+        if (i === line) {
+          paragraph.font.highlightColor = 'Yellow';
+        }
+      }
+      await context.sync();
+    });
+  };
+
+  setBreakpoint = async () => {
+
+    Word.run(async (context) => {
+
+      let selection = context.document.getSelection();
+      selection.load();
+
+      await context.sync();
+
+      console.log("Empty selection, cursor.");
+
+      const paragraph = selection.paragraphs.getFirst();
+      paragraph.select();
+      context.load(paragraph, ["text", "font"]);
+
+      var paragraphs = context.document.body.paragraphs;
+      paragraphs.load("$none");
+      await context.sync();
+      let line = 0;
+      for (let i = 0; i < paragraphs.items.length; i++) {
+        const paragraph1 = paragraphs.items[i]
+
+        if (paragraph1 === paragraph) {
+          line = i + 1;
+          paragraph.font.color = "orange";
+        }
+
+
+
+      }
+
+
+
+      return context.sync();
+    });
+  }
+
+  run = async () => {
+
+    const url = `${this.host}/debugger/${this.botId}/start`;
+
+    $.ajax({
+      url: url,
+      dataType: 'json',
+    }).done(function (item) {
+      this.state.mode= 1;
+    }).fail(function (error) {
+      console.log(error);
+    });
+  }
+
 
   click = async () => {
     return Word.run(async (context) => {
-      var words = context.document.getSelection().getTextRanges([" "], true);
-      context.load(words, ["text", "font"]);
-      var boldRanges = [];
-      return context
-        .sync()
-        .then(function () {
-          for (var i = 0; i < words.items.length; ++i) {
-            var word = words.items[i];
-            if (word.text === "TALK") boldRanges.push(word);
-          }
-        })
-        .then(function () {
-          for (var j = 0; j < boldRanges.length; ++j) {
-            boldRanges[j].font.color = "blue";
-          }
-        });
+
+      var paragraphs = context.document.body.paragraphs;
+      paragraphs.load("$none");
+      await context.sync();
+      for (let i = 0; i < paragraphs.items.length; i++) {
+        const paragraph = paragraphs.items[i]
+        context.load(paragraph, ["text", "font"]);
+        paragraph.font.highlightColor = null;
+
+        var words = paragraph.getTextRanges([" "], true);
+        context.load(words, ["text", "font"]);
+        var boldWords = [];
+        for (var j = 0; j < words.items.length; ++j) {
+          var word = words.items[j];
+          if (word.text === "TALK" && j == 0) boldWords.push(word);
+          if (word.text === "HEAR" && j == 0) boldWords.push(word);
+          if (word.text === "SAVE" && j == 0) boldWords.push(word);
+          if (word.text === "FIND" && j == 3) boldWords.push(word);
+          if (word.text === "OPEN" && j == 0) boldWords.push(word);
+        }
+        for (var j = 0; j < boldWords.length; ++j) {
+          boldWords[j].font.color = "blue";
+          boldWords[j].font.bold = true;
+        }
+      }
+      await context.sync();
+
+
     });
   };
 
