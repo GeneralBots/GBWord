@@ -32,8 +32,10 @@ export default class App extends React.Component<AppProps, AppState> {
     };
   }
 
-  botId: any;
+  botId = 'dev-rodriguez';
+  botKey = 'starter';
   host = 'http://localhost';
+  breakpointsMap = {};
 
   componentDidMount() {
     this.setState({
@@ -57,6 +59,39 @@ export default class App extends React.Component<AppProps, AppState> {
   }
 
 
+  update = async (line) => {
+
+    const url = `${this.host}/debugger/${this.botId}/refresh`;
+
+    $.ajax({
+      data: { botId: this.botId, botKey: this.botKey, line },
+      url: url,
+      dataType: 'json',
+    }).done(function (item) {
+
+      Word.run(async (context) => {
+        var paragraphs = context.document.body.paragraphs;
+        paragraphs.load("$none");
+        await context.sync();
+        for (let i = 0; i < paragraphs.items.length; i++) {
+          const paragraph = paragraphs.items[i]
+
+          context.load(paragraph, ["text", "font"]);
+          paragraph.font.highlightColor = null;
+
+          if (i === line) {
+            paragraph.font.highlightColor = 'Yellow';
+          }
+        }
+        await context.sync();
+      });
+
+    }).fail(function (error) {
+      console.log(error);
+    });
+  };
+
+
   setExecutionLine = async (line) => {
     Word.run(async (context) => {
       var paragraphs = context.document.body.paragraphs;
@@ -78,6 +113,8 @@ export default class App extends React.Component<AppProps, AppState> {
 
   setBreakpoint = async () => {
 
+    let line = 0;
+
     Word.run(async (context) => {
 
       let selection = context.document.getSelection();
@@ -94,39 +131,102 @@ export default class App extends React.Component<AppProps, AppState> {
       var paragraphs = context.document.body.paragraphs;
       paragraphs.load("$none");
       await context.sync();
-      let line = 0;
+
       for (let i = 0; i < paragraphs.items.length; i++) {
         const paragraph1 = paragraphs.items[i]
 
         if (paragraph1 === paragraph) {
           line = i + 1;
-          paragraph.font.color = "orange";
+          paragraph.font.highlightColor = 'Orange';
         }
-
-
-
       }
-
-
 
       return context.sync();
     });
-  }
 
-  run = async () => {
 
-    const url = `${this.host}/debugger/${this.botId}/start`;
+    const url = `${this.host}/debugger/${this.botId}/setBreakpoint`;
 
     $.ajax({
+      data: { botId: this.botId, botKey: this.botKey, line },
       url: url,
       dataType: 'json',
     }).done(function (item) {
-      this.state.mode= 1;
+
     }).fail(function (error) {
       console.log(error);
     });
   }
 
+  continueExecution = async () => {
+
+    const url = `${this.host}/debugger/${this.botId}/continueRun`;
+
+    $.ajax({
+      data: { botId: this.botId, botKey: this.botKey },
+      url: url,
+      dataType: 'json',
+    }).done(function (item) {
+      this.state.mode = 1;
+    }).fail(function (error) {
+      console.log(error);
+    });
+  }
+
+
+
+  stepOver = async () => {
+
+    const url = `${this.host}/debugger/${this.botId}/stepOver`;
+
+    $.ajax({
+      data: { botId: this.botId, botKey: this.botKey },
+      url: url,
+      dataType: 'json',
+    }).done(function (item) {
+      this.state.mode = 2;
+    }).fail(function (error) {
+      console.log(error);
+    });
+  }
+
+
+  stop = async () => {
+
+    const url = `${this.host}/debugger/${this.botId}/stop`;
+
+    $.ajax({
+      data: { botId: this.botId, botKey: this.botKey },
+      url: url,
+      dataType: 'json',
+    }).done(function (item) {
+      this.state.mode = 0;
+    }).fail(function (error) {
+      console.log(error);
+    });
+  }
+
+
+  run = async () => {
+
+    if (this.state.mode === 0) {
+
+      const url = `${this.host}/debugger/${this.botId}/start`;
+
+      $.ajax({
+        data: { botId: this.botId, botKey: this.botKey },
+        url: url,
+        dataType: 'json',
+      }).done(function (item) {
+        this.state.mode = 1;
+      }).fail(function (error) {
+        console.log(error);
+      });
+    }
+    else {
+      this.continueExecution();
+    }
+  }
 
   click = async () => {
     return Word.run(async (context) => {
@@ -174,9 +274,6 @@ export default class App extends React.Component<AppProps, AppState> {
       <div className="ms-welcome">
         <Header logo="assets/logo-filled.png" title={this.props.title} message="Welcome" />
         <HeroList message="Discover what General Bots can do for you today!" items={this.state.listItems}>
-          <p className="ms-font-l">
-            <b>Format your Bot Code with a click</b>.
-          </p>
           <Button
             className="ms-welcome__action"
             buttonType={ButtonType.hero}
@@ -184,6 +281,38 @@ export default class App extends React.Component<AppProps, AppState> {
             onClick={this.click}
           >
             Format .gbdialog
+          </Button>
+          <Button
+            className="ms-welcome__action"
+            buttonType={ButtonType.hero}
+            iconProps={{ iconName: "BsPlayCircle" }}
+            onClick={this.run}
+          >
+            Run
+          </Button>
+          <Button
+            className="ms-welcome__action"
+            buttonType={ButtonType.hero}
+            iconProps={{ iconName: "BsPlayCircle" }}
+            onClick={this.stop}
+          >
+            Stop
+          </Button>
+          <Button
+            className="ms-welcome__action"
+            buttonType={ButtonType.hero}
+            iconProps={{ iconName: "BsPlayCircle" }}
+            onClick={this.setBreakpoint}
+          >
+            Set Breakpoint
+          </Button>
+          <Button
+            className="ms-welcome__action"
+            buttonType={ButtonType.hero}
+            iconProps={{ iconName: "BsPlayCircle" }}
+            onClick={this.stepOver}
+          >
+            Step Over
           </Button>
         </HeroList>
       </div>
