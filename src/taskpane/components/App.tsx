@@ -154,7 +154,7 @@ export default class App extends React.Component<AppProps, AppState> {
       return context.sync();
     });
 
-    const url = `${this.host}/api/v2/${this.botId}/debugger/setBreakpoint`;
+    const url = `${this.host}/api/v2/${this.botId}/debugger/breakpoint`;
 
     $.ajax({
       data: { botId: this.botId, botKey: this.botKey, line },
