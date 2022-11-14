@@ -21,7 +21,10 @@ export interface AppState {
   mode: number;
   conversationText: string;
   scope: string;
+  state: number;
+  stateInfo: string;
   inputText: string;
+  messages: string;
 }
 
 export default class App extends React.Component<AppProps, AppState> {
@@ -32,6 +35,8 @@ export default class App extends React.Component<AppProps, AppState> {
       listItems: [],
       conversationText: "",
       scope: "",
+      scopeInfo: "",
+      messages: "",
       inputText: "",
     };
   }
@@ -59,27 +64,30 @@ export default class App extends React.Component<AppProps, AppState> {
       ],
     });
 
-    // setTimeout((() => {
-    //   const context = this.updateExecutionContext();
+    setTimeout((() => {
+      const context = this.context();
 
-    //   this.setState({
-    //     mode: context['state'],
-    //     message: context['messages'][0],
-    //     scope: context['scope']
-    //   });
-    // }).bind(this), 3000);
+      this.setState({
+        mode: context['state'],
+        messages: context['messages'],
+        scope: context['scope']
+      });
+    }).bind(this), 3000);
   }
 
-  updateExecutionContext = async () => {
+  context = async () => {
     
-    const url = `${this.host}/api/v2/${this.botId}/debugger/getExecutionContext`;
+    const url = `${this.host}/api/v2/${this.botId}/debugger/context`;
 
     $.ajax({
       data: { botId: this.botId, botKey: this.botKey },
       url: url,
       dataType: "json",
+      method:"POST"
+      
     })
       .done(function (item) {
+        console.log('GBWord Add-in: context OK.');
         const line = item.line;
 
         Word.run(async (context) => {
@@ -123,7 +131,7 @@ export default class App extends React.Component<AppProps, AppState> {
     });
   };
 
-  setBreakpoint = async () => {
+  breakpoint = async () => {
     let line = 0;
 
     Word.run(async (context) => {
@@ -160,22 +168,27 @@ export default class App extends React.Component<AppProps, AppState> {
       data: { botId: this.botId, botKey: this.botKey, line },
       url: url,
       dataType: "json",
+      method:"POST"
     })
-      .done(function () {})
+      .done(function () {
+        console.log('GBWord Add-in: breakpoint OK.');
+      })
       .fail(function (error) {
         console.log(error);
       });
   };
 
-  continueExecution = async () => {
-    const url = `${this.host}/api/v2/${this.botId}/debugger/continueRun`;
+  resume = async () => {
+    const url = `${this.host}/api/v2/${this.botId}/debugger/resume`;
 
     $.ajax({
       data: { botId: this.botId, botKey: this.botKey },
       url: url,
       dataType: "json",
+      method:"POST"
     })
       .done(function () {
+        console.log('GBWord Add-in: resume OK.');
         this.state.mode = 1;
       })
       .fail(function (error) {
@@ -183,15 +196,17 @@ export default class App extends React.Component<AppProps, AppState> {
       });
   };
 
-  stepOver = async () => {
-    const url = `${this.host}/api/v2/${this.botId}/debugger/stepOver`;
+  step = async () => {
+    const url = `${this.host}/api/v2/${this.botId}/debugger/step`;
 
     $.ajax({
       data: { botId: this.botId, botKey: this.botKey },
       url: url,
       dataType: "json",
+      method:"POST"
     })
       .done(function () {
+        console.log('GBWord Add-in: step OK.');
         this.state.mode = 2;
       })
       .fail(function (error) {
@@ -206,8 +221,10 @@ export default class App extends React.Component<AppProps, AppState> {
       data: { botId: this.botId, botKey: this.botKey },
       url: url,
       dataType: "json",
+      method:"POST"
     })
       .done(function () {
+        console.log('GBWord Add-in: stop OK.');
         this.state.mode = 0;
       })
       .fail(function (error) {
@@ -223,7 +240,7 @@ export default class App extends React.Component<AppProps, AppState> {
     console.log(args);
   };
 
-  run = async () => {
+  debug = async () => {
     if (this.state.mode === 0) {
       const url = `${this.host}/api/v2/${this.botId}/debugger/run`;
 
@@ -231,15 +248,17 @@ export default class App extends React.Component<AppProps, AppState> {
         data: { botId: this.botId, botKey: this.botKey },
         url: url,
         dataType: "json",
+        method:"POST"
       })
         .done(function () {
+          console.log('GBWord Add-in: debug OK.');
           this.state.mode = 1;
         })
         .fail(function (error) {
           console.log(error);
         });
-    } else {
-      this.continueExecution();
+    } else if (this.state.mode === 2) {
+      this.resume();
     }
   };
 
@@ -302,21 +321,21 @@ export default class App extends React.Component<AppProps, AppState> {
         <a onClick={this.formatCode} href="#">
           <i className={`ms-Icon ms-Icon--DocumentApproval`} title="Format"></i>
           &nbsp;Format</a>&nbsp;&nbsp;
-        <a onClick={this.run} href="#">
+        <a onClick={this.debug} href="#">
         <i className={`ms-Icon ms-Icon--AirplaneSolid`} title="Run"></i>
         &nbsp; Run</a>&nbsp;&nbsp;
         <a onClick={this.stop} href="#">
         <i className={`ms-Icon ms-Icon--StopSolid`} title="Stop"></i>
         &nbsp; Stop</a>&nbsp;&nbsp;
-        <a onClick={this.stepOver} href="#">
+        <a onClick={this.step} href="#">
         <i className={`ms-Icon ms-Icon--Next`} title="Step Over"></i>
         &nbsp; Step</a>&nbsp;&nbsp;
-        <a onClick={this.setBreakpoint} href="#">
+        <a onClick={this.breakpoint} href="#">
         <i className={`ms-Icon ms-Icon--DRM`} title="Set Breakpoint"></i>
         &nbsp; Break</a>
         <br />
         <br />
-        <div>Excution Mode: {this.state.mode} </div>
+        <div>Status: {this.state.stateInfo} </div>
         <br />
         <div>Bot Messages:</div>
         <textarea title="Bot Messages" value={this.state.conversationText} readOnly={true}></textarea>
@@ -328,7 +347,8 @@ export default class App extends React.Component<AppProps, AppState> {
           onKeyDown={this.sendMessage}
           onChange={this.onChange}
         ></input>
-        <div>Debug Scope: {this.state.scope} </div>
+        <div>Variables:</div>
+        <div>{this.state.scope} </div>
         <HeroList message="Discover what General Bots can do for you today!!" items={this.state.listItems}></HeroList>
       </div>
     );
