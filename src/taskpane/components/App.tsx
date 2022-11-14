@@ -5,6 +5,7 @@ import Progress from "./Progress";
 import "../../../assets/icon-16.png";
 import "../../../assets/icon-32.png";
 import "../../../assets/icon-80.png";
+import $ from "jquery";
 
 /* global Word */
 
@@ -35,15 +36,16 @@ export default class App extends React.Component<AppProps, AppState> {
       listItems: [],
       conversationText: "",
       scope: "",
-      scopeInfo: "",
+      state: 0,
+      stateInfo: "",
       messages: "",
       inputText: "",
     };
   }
 
-  botId = "dev-";
+  botId = "dev-rodriguez";
   botKey = "starter";
-  host = "http://localhost";
+  host = "https://042b-179-55-100-50.sa.ngrok.io";
   breakpointsMap = {};
 
   componentDidMount() {
@@ -63,31 +65,19 @@ export default class App extends React.Component<AppProps, AppState> {
         },
       ],
     });
-
-    setTimeout((() => {
-      const context = this.context();
-
-      this.setState({
-        mode: context['state'],
-        messages: context['messages'],
-        scope: context['scope']
-      });
-    }).bind(this), 3000);
   }
 
   context = async () => {
-    
     const url = `${this.host}/api/v2/${this.botId}/debugger/context`;
 
     $.ajax({
       data: { botId: this.botId, botKey: this.botKey },
       url: url,
       dataType: "json",
-      method:"POST"
-      
+      method: "POST",
     })
       .done(function (item) {
-        console.log('GBWord Add-in: context OK.');
+        console.log("GBWord Add-in: context OK.");
         const line = item.line;
 
         Word.run(async (context) => {
@@ -107,8 +97,11 @@ export default class App extends React.Component<AppProps, AppState> {
           await context.sync();
         });
       })
-      .fail(function (error) {
-        console.log(error);
+      .fail(function (jqXHR, textStatus, errorThrown) {
+        let x = jqXHR,
+          y = errorThrown;
+
+        console.log(textStatus);
       });
   };
 
@@ -168,13 +161,16 @@ export default class App extends React.Component<AppProps, AppState> {
       data: { botId: this.botId, botKey: this.botKey, line },
       url: url,
       dataType: "json",
-      method:"POST"
+      method: "POST",
     })
       .done(function () {
-        console.log('GBWord Add-in: breakpoint OK.');
+        console.log("GBWord Add-in: breakpoint OK.");
       })
-      .fail(function (error) {
-        console.log(error);
+      .fail(function (jqXHR, textStatus, errorThrown) {
+        let x = jqXHR,
+          y = errorThrown;
+
+        console.log(textStatus);
       });
   };
 
@@ -185,14 +181,16 @@ export default class App extends React.Component<AppProps, AppState> {
       data: { botId: this.botId, botKey: this.botKey },
       url: url,
       dataType: "json",
-      method:"POST"
+      method: "POST",
     })
       .done(function () {
-        console.log('GBWord Add-in: resume OK.');
-        this.state.mode = 1;
+        console.log("GBWord Add-in: resume OK.");
+        this.setState({ mode: 1 });
       })
-      .fail(function (error) {
-        console.log(error);
+      .fail(function (jqXHR, textStatus, errorThrown) {
+        let x = jqXHR,
+          y = errorThrown;
+        console.log(textStatus);
       });
   };
 
@@ -203,14 +201,16 @@ export default class App extends React.Component<AppProps, AppState> {
       data: { botId: this.botId, botKey: this.botKey },
       url: url,
       dataType: "json",
-      method:"POST"
+      method: "POST",
     })
       .done(function () {
-        console.log('GBWord Add-in: step OK.');
-        this.state.mode = 2;
+        console.log("GBWord Add-in: step OK.");
+        this.setState({ mode: 2 });
       })
-      .fail(function (error) {
-        console.log(error);
+      .fail(function (jqXHR, textStatus, errorThrown) {
+        let x = jqXHR,
+          y = errorThrown;
+        console.log(textStatus);
       });
   };
 
@@ -221,14 +221,16 @@ export default class App extends React.Component<AppProps, AppState> {
       data: { botId: this.botId, botKey: this.botKey },
       url: url,
       dataType: "json",
-      method:"POST"
+      method: "POST",
     })
       .done(function () {
-        console.log('GBWord Add-in: stop OK.');
-        this.state.mode = 0;
+        console.log("GBWord Add-in: stop OK.");
+        this.setState({ mode: 0 });
       })
-      .fail(function (error) {
-        console.log(error);
+      .fail(function (jqXHR, textStatus, errorThrown) {
+        let x = jqXHR,
+          y = errorThrown;
+        console.log(textStatus);
       });
   };
 
@@ -242,24 +244,42 @@ export default class App extends React.Component<AppProps, AppState> {
 
   debug = async () => {
     if (this.state.mode === 0) {
-      const url = `${this.host}/api/v2/${this.botId}/debugger/run`;
+      const url = `${this.host}/api/v2/${this.botId}/debugger/Running`;
 
       $.ajax({
         data: { botId: this.botId, botKey: this.botKey },
-        url: url,
-        dataType: "json",
-        method:"POST"
+        url: url + `?botId=${this.botId}&scriptName=auto`, // TODO: Migrate to POST.
+        contentType: "application/json",
+        dataType: "jsonp",
+        method: "GET",
       })
         .done(function () {
-          console.log('GBWord Add-in: debug OK.');
+          console.log("GBWord Add-in: debug OK.");
           this.state.mode = 1;
         })
-        .fail(function (error) {
-          console.log(error);
+        .fail(function (jqXHR, textStatus, errorThrown) {
+          let x = jqXHR,
+            y = errorThrown;
+          console.log(textStatus);
         });
     } else if (this.state.mode === 2) {
       this.resume();
     }
+
+    const waitFor = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
+    const refresh = async () => {
+      const context = await this.context();
+
+      this.setState({
+        mode: context["state"],
+        messages: context["messages"],
+        scope: context["scope"],
+      });
+
+      await waitFor(3000);
+      await refresh();
+    };
+    await refresh();
   };
 
   formatCode = async () => {
@@ -320,19 +340,28 @@ export default class App extends React.Component<AppProps, AppState> {
         &nbsp;
         <a onClick={this.formatCode} href="#">
           <i className={`ms-Icon ms-Icon--DocumentApproval`} title="Format"></i>
-          &nbsp;Format</a>&nbsp;&nbsp;
+          &nbsp;Format
+        </a>
+        &nbsp;&nbsp;
         <a onClick={this.debug} href="#">
-        <i className={`ms-Icon ms-Icon--AirplaneSolid`} title="Run"></i>
-        &nbsp; Run</a>&nbsp;&nbsp;
+          <i className={`ms-Icon ms-Icon--AirplaneSolid`} title="Run"></i>
+          &nbsp; Run
+        </a>
+        &nbsp;&nbsp;
         <a onClick={this.stop} href="#">
-        <i className={`ms-Icon ms-Icon--StopSolid`} title="Stop"></i>
-        &nbsp; Stop</a>&nbsp;&nbsp;
+          <i className={`ms-Icon ms-Icon--StopSolid`} title="Stop"></i>
+          &nbsp; Stop
+        </a>
+        &nbsp;&nbsp;
         <a onClick={this.step} href="#">
-        <i className={`ms-Icon ms-Icon--Next`} title="Step Over"></i>
-        &nbsp; Step</a>&nbsp;&nbsp;
+          <i className={`ms-Icon ms-Icon--Next`} title="Step Over"></i>
+          &nbsp; Step
+        </a>
+        &nbsp;&nbsp;
         <a onClick={this.breakpoint} href="#">
-        <i className={`ms-Icon ms-Icon--DRM`} title="Set Breakpoint"></i>
-        &nbsp; Break</a>
+          <i className={`ms-Icon ms-Icon--DRM`} title="Set Breakpoint"></i>
+          &nbsp; Break
+        </a>
         <br />
         <br />
         <div>Status: {this.state.stateInfo} </div>
