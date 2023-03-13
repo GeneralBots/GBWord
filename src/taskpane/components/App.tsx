@@ -43,9 +43,9 @@ export default class App extends React.Component<AppProps, AppState> {
     };
   }
 
-  botId = "dev-rodriguez";
+  botId = "dev-rodriguez22";
   botKey = "starter";
-  host = "https://042b-179-55-100-50.sa.ngrok.io";
+  host = "https://tender-yak-44.telebit.io";
   breakpointsMap = {};
 
   componentDidMount() {
@@ -68,7 +68,7 @@ export default class App extends React.Component<AppProps, AppState> {
   }
 
   context = async () => {
-    const url = `${this.host}/api/v2/${this.botId}/debugger/context`;
+    const url = `${this.host}/api/v3/${this.botId}/dbg/getContext`;
 
     $.ajax({
       data: { botId: this.botId, botKey: this.botKey },
@@ -155,7 +155,7 @@ export default class App extends React.Component<AppProps, AppState> {
       return context.sync();
     });
 
-    const url = `${this.host}/api/v2/${this.botId}/debugger/breakpoint`;
+    const url = `${this.host}/api/v3/${this.botId}/dbg/setBreakpoint`;
 
     $.ajax({
       data: { botId: this.botId, botKey: this.botKey, line },
@@ -175,7 +175,7 @@ export default class App extends React.Component<AppProps, AppState> {
   };
 
   resume = async () => {
-    const url = `${this.host}/api/v2/${this.botId}/debugger/resume`;
+    const url = `${this.host}/api/v3/${this.botId}/dbg/resume`;
 
     $.ajax({
       data: { botId: this.botId, botKey: this.botKey },
@@ -195,7 +195,7 @@ export default class App extends React.Component<AppProps, AppState> {
   };
 
   step = async () => {
-    const url = `${this.host}/api/v2/${this.botId}/debugger/step`;
+    const url = `${this.host}/api/v3/${this.botId}/dbg/step`;
 
     $.ajax({
       data: { botId: this.botId, botKey: this.botKey },
@@ -215,7 +215,7 @@ export default class App extends React.Component<AppProps, AppState> {
   };
 
   stop = async () => {
-    const url = `${this.host}/api/v2/${this.botId}/debugger/stop`;
+    const url = `${this.host}/api/v3/${this.botId}/dbg/stop`;
 
     $.ajax({
       data: { botId: this.botId, botKey: this.botKey },
@@ -235,23 +235,54 @@ export default class App extends React.Component<AppProps, AppState> {
   };
 
   sendMessage = async (args) => {
-    console.log(args);
+    if (args.keyCode === 13) {
+      const text = args.target.value;
+      const url = `${this.host}/api/v3/${this.botId}/dbg/sendMessage`;
+
+      $.ajax({
+        data: { botId: this.botId, botKey: this.botKey, text: text },
+        url: url,
+        dataType: "json",
+        method: "POST",
+      })
+        .done(function () {
+          console.log("GBWord Add-in: sendMessage OK.");
+          args.target.value = "";
+        })
+        .fail(function (jqXHR, textStatus, errorThrown) {
+          let x = jqXHR,
+            y = errorThrown;
+          console.log(textStatus);
+        });
+    }
   };
 
-  onChange = async (args) => {
-    console.log(args);
+  waitFor = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
+  
+  refresh = async () => {
+    const context = await this.context();
+
+    this.setState({
+      conversationText: context['conversationText'],
+      state: context['state'],
+      messages: context['messages'],
+      scope: context['scope'],
+      mode: context['state' ]
+    });
+    await this.waitFor(3000);
+    await this.refresh();
   };
+
 
   debug = async () => {
     if (this.state.mode === 0) {
-      const url = `${this.host}/api/v2/${this.botId}/debugger/Running`;
+      const url = `${this.host}/api/v3/${this.botId}/dbg/start`;
 
       $.ajax({
-        data: { botId: this.botId, botKey: this.botKey },
-        url: url + `?botId=${this.botId}&scriptName=auto`, // TODO: Migrate to POST.
-        contentType: "application/json",
-        dataType: "jsonp",
-        method: "GET",
+        data: { botId: this.botId, botKey: this.botKey, scriptName: "auto" },
+        url: url,
+        dataType: "json",
+        method: "POST",
       })
         .done(function () {
           console.log("GBWord Add-in: debug OK.");
@@ -266,20 +297,7 @@ export default class App extends React.Component<AppProps, AppState> {
       this.resume();
     }
 
-    const waitFor = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
-    const refresh = async () => {
-      const context = await this.context();
-
-      this.setState({
-        mode: context["state"],
-        messages: context["messages"],
-        scope: context["scope"],
-      });
-
-      await waitFor(3000);
-      await refresh();
-    };
-    await refresh();
+    await this.refresh();
   };
 
   formatCode = async () => {
@@ -369,13 +387,11 @@ export default class App extends React.Component<AppProps, AppState> {
         <div>Bot Messages:</div>
         <textarea title="Bot Messages" value={this.state.conversationText} readOnly={true}></textarea>
         <br />
-        <input
-          type="text"
+        <textarea
           title="Message"
-          value={this.state.inputText}
+          readOnly={false}
           onKeyDown={this.sendMessage}
-          onChange={this.onChange}
-        ></input>
+        ></textarea>
         <div>Variables:</div>
         <div>{this.state.scope} </div>
         <HeroList message="Discover what General Bots can do for you today!!" items={this.state.listItems}></HeroList>
