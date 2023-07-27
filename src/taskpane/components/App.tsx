@@ -174,6 +174,55 @@ export default class App extends React.Component<AppProps, AppState> {
       });
   };
 
+  refactor = async () => {
+    let line = 0;
+
+    let change = 'ssssssssssssssssssss';
+
+    Word.run(async (context) => {
+      let selection = context.document.getSelection();
+      selection.load();
+
+      await context.sync();
+
+      var paragraphs = selection.paragraphs;
+      paragraphs.load("$none");
+      await context.sync();
+      let code = '';
+      for (let i = 0; i < paragraphs.items.length; i++) {
+
+        const paragraph = paragraphs.items[i];
+        context.load(paragraph, ["text", "font"]);
+        code += paragraph.text;
+      }
+
+      const url = `${this.host}/api/v3/${this.botId}/dbg/refactor`;
+
+      $.ajax({
+        data: { botId: this.botId, code: code, change: change },
+        url: url,
+        dataType: "json",
+        method: "POST",
+      })
+        .done(async function (data) {
+
+          Word.run(async (context) => {
+            var selectedRange = context.document.getSelection();
+            context.load(selectedRange, "text");
+            selectedRange.text = data;
+
+            await context.sync();
+          });
+        })
+        .fail(function (jqXHR, textStatus, errorThrown) {
+          console.log(textStatus);
+        });
+
+      return context.sync();
+    });
+
+  };
+
   resume = async () => {
     const url = `${this.host}/api/v3/${this.botId}/dbg/resume`;
 
@@ -258,7 +307,7 @@ export default class App extends React.Component<AppProps, AppState> {
   };
 
   waitFor = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
-  
+
   refresh = async () => {
     const context = await this.context();
 
@@ -267,7 +316,7 @@ export default class App extends React.Component<AppProps, AppState> {
       state: context['state'],
       messages: context['messages'],
       scope: context['scope'],
-      mode: context['state' ]
+      mode: context['state']
     });
     await this.waitFor(3000);
     await this.refresh();
